@@ -1,0 +1,126 @@
+
+
+services:
+  # api:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   depends_on:
+  #     - timescaledb
+  #   networks:
+  #     - gtstack_private
+  #     - gtstack_public
+
+  # cloud_storage:
+  #   image: tang-cloud-storage
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: cloud-storage
+  #   restart: unless-stopped
+  #   environment:
+  #     GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+  #     GCP_PRIVATE_KEY: ${GCP_PRIVATE_KEY}
+  #     GCP_CLIENT_EMAIL: ${GCP_CLIENT_EMAIL}
+  #     GCP_BACKUP_FOLDER: ${GCP_BACKUP_FOLDER}
+  #   volumes:
+  #     - ./timescale/backups:/usr/src/backups
+
+  # filebrowser:
+  #   image: filebrowser/filebrowser
+  #   volumes:
+  #     - ./filebrowser/filebrowser.db:/filebrowser.db
+  #     - ./filebrowser/.filebrowser.json:/.filebrowser.json
+  #     - ./timescale/python-backups/csv:/srv:ro
+  #   # user: "1000"
+  #   group_add:
+  #     - "1000"
+  #   networks:
+  #     - tang-private
+  #   # ports:
+  #   #   - 3000:80
+
+  timescale:
+    image: timescale/timescaledb-ha:pg17
+    shm_size: 1gb
+    command: -p ${POSTGRES_PORT}
+    entrypoint: >
+      bash -c '
+        crond -f -L /dev/stdout &
+        /usr/local/bin/docker-entrypoint.sh postgres -p $POSTGRES_PORT
+      '
+    restart: unless-stopped
+    volumes:
+      - ./timescale/data:/var/lib/postgresql/data
+      - ./timescale/backups:/usr/src/backups
+      - ./timescale/config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      # - ./timescale/config/cron:/etc/periodic:z #z = runnable
+      # - ./timescale/python-backups:/usr/src/python-backups
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+    # ports:
+    #   - 5432:5432
+
+  # grafana:
+  #   image: grafana/grafana-oss:latest
+  #   user: "0"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./grafana/data:/var/lib/grafana
+  #   networks:
+  #     - tang-private
+
+  pgadmin:
+    image: dpage/pgadmin4:8.13
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      SCRIPT_NAME: /pgadmin
+    user: "0"
+    volumes:
+      - ./pgadmin/data:/var/lib/pgadmin
+
+  # nginx:
+  #   image: nginx:1.26.0-alpine
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - pgadmin
+  #     - grafana
+  #     - filebrowser
+  #   ports:
+  #     - "7000:80"
+  #     - "7001:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+  #     - ./nginx/proxy.conf:/etc/nginx/proxy.conf
+  #     - ./nginx/404.html:/var/www/404.html
+  #   networks:
+  #     - tang-private
+
+  # mosquitto:
+  #   # user: "1000"
+  #   image: eclipse-mosquitto:latest
+  #   restart: unless-stopped
+  #   ports:
+  #     - 1883:1883
+  #     - 8883:8883
+  #   volumes:
+  #     - ./mosquitto/certs:/mosquitto/certs
+  #     - ./mosquitto/config:/mosquitto/config:rw
+  #     - ./mosquitto/data:/mosquitto/data
+  #     - ./mosquitto/log:/mosquitto/log
+  #   # networks:
+  #   #   - tang-private
+
+  # flowbatteryoptimizer:
+  #   container_name: "flowbatteryoptimizer"
+  #   image: ghcr.io/bryte-as/flow-battery-optimizer:latest
+  #   restart: always
+  #   ports:
+  #     - 5000:5000
+  #   env_file:
+  #     - .env
