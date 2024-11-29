@@ -16,6 +16,9 @@
     "baseUrl": ".",
     "paths": {
       "@app/core": ["libs/api/core/src/index.ts"],
+      "@app/service-feature": ["libs/api/service/feature/src/index.ts"],
+      "@app/service-data-access": ["libs/api/service/data-access/src/index.ts"],
+      "@app/service-models": ["libs/api/service/models/src/index.ts"],
       "@app/typeorm-config": ["libs/api/typeorm/config/src/index.ts"],
       "@app/typeorm-feature": ["libs/api/typeorm/feature/src/index.ts"]
     }
