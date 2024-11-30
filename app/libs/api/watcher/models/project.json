@@ -1,0 +1,9 @@
+{
+  "name": "watcher-models",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/watcher/models/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project watcher-models --web",
+  "targets": {}
+}

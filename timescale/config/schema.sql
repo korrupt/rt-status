@@ -1,37 +1,103 @@
-CREATE TABLE IF NOT EXISTS status_log (
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "postgis";
+
+CREATE TABLE IF NOT EXISTS domain (
+    id uuid DEFAULT uuid_generate_v4(),
+    slug character varying NOT NULL COLLATE pg_catalog."default",
+    name character varying NOT NULL collate pg_catalog."default",
+    description character varying NOT NULL COLLATE pg_catalog."default",
+
+    CONSTRAINT "PK_DOMAIN_ID" PRIMARY KEY (id),
+    CONSTRAINT "UQ_DOMAIN_SLUG" UNIQUE (slug)
+);
+
+CREATE TABLE IF NOT EXISTS device (
+    id uuid DEFAULT uuid_generate_v4(),
+    slug character varying COLLATE pg_catalog."default",
+    description character varying NOT NULL COLLATE pg_catalog."default",
+    location GEOGRAPHY(Point),
+
+    CONSTRAINT "PK_DEVICE_ID" PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS domain_device (
+    domain_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+
+    slug character varying COLLATE pg_catalog."default",
+
+    CONSTRAINT "FK_DOMAIN_DEVICE_DOMAIN" FOREIGN KEY (domain_id)
+        REFERENCES public."domain" (id)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    
+    CONSTRAINT "FK_DOMAIN_DEVICE_DEVICE" FOREIGN KEY (device_id)
+        REFERENCES public."device" (id)
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+
+    CONSTRAINT "UQ_DOMAIN_DEVICE_SLUG" UNIQUE (domain_id, slug)
+);
+
+CREATE TABLE IF NOT EXISTS watcher (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    slug character varying COLLATE pg_catalog."default",
+    description character varying NOT NULL COLLATE pg_catalog."default",
+
+    device_id uuid NOT NULL,
+
+    CONSTRAINT "PK_WATCHER" PRIMARY KEY (id),
+    CONSTRAINT "FK_WATCHER_DEVICE" FOREIGN KEY (device_id)
+        REFERENCES public."device" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS DOMAIN_DEVICE_WATCHER (
+    domain_id uuid NOT NULL,
+    device_id uuid NOT NULL,
+    watcher_id uuid NOT NULL,
+
+    slug character varying NOT NULL,
+
+    CONSTRAINT "FK_DOMAIN_DEVICE_WATCHER_DOMAIN" FOREIGN KEY (domain_id)
+        REFERENCES public."domain" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+
+    CONSTRAINT "FK_DOMAIN_DEVICE_WATCHER_DEVICE" FOREIGN KEY (device_id)
+        REFERENCES public."device" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+
+    CONSTRAINT "FK_DOMAIN_DEVICE_WATCHER_WATCHER" FOREIGN KEY (watcher_id)
+        REFERENCES public."watcher" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+
+    CONSTRAINT "PK_DOMAIN_DEVICE_WATCHER" PRIMARY KEY (domain_id, device_id, watcher_id),
+    CONSTRAINT "UQ_DOMAIN_DEVICE_WATCHER_SLUG" UNIQUE (domain_id, device_id, watcher_id, slug)
+);
+
+CREATE TABLE IF NOT EXISTS watcher_heartbeat (
     time TIMESTAMPTZ NOT NULL,
-    service text
-    data JSON DEFAULT '{}'
-);
-SELECT create_hypertable('mqtt_log','time');
+    data JSON DEFAULT '{}',
+    watcher_id uuid NOT NULL,
 
-ALTER TABLE mqtt_log SET (timescaledb.compress,
+    CONSTRAINT "FK_WATCHER_HEARTBEAT_WATCHER" FOREIGN KEY (watcher_id)
+        REFERENCES public.watcher (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+SELECT create_hypertable('watcher_heartbeat','time');
+
+ALTER TABLE watcher_heartbeat SET (timescaledb.compress,
    timescaledb.compress_orderby = 'time DESC',
-   timescaledb.compress_segmentby = 'topic'
+   timescaledb.compress_segmentby = 'watcher_id'
 );
 
-SELECT add_compression_policy('mqtt_log', compress_after => INTERVAL '60d');
-SELECT add_retention_policy('mqtt_log', INTERVAL '6 months');
+SELECT add_compression_policy('watcher_heartbeat', compress_after => INTERVAL '60d');
+SELECT add_retention_policy('watcher_heartbeat', INTERVAL '6 months');
 
-CREATE INDEX IF NOT EXISTS idx_status_log_time_service ON status_log (service, time DESC);
-
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_topic ON mqtt_log (topic, time DESC);
--- ALTER TABLE mqtt_log
--- ADD COLUMN time_1hr     TIMESTAMPTZ GENERATED ALWAYS AS (date_bin('1 hours',    time AT TIME ZONE 'UTC', '2000-01-01 00:00:00+00')) STORED,
--- ADD COLUMN time_30min   TIMESTAMPTZ GENERATED ALWAYS AS (date_bin('30 minutes', time AT TIME ZONE 'UTC', '2000-01-01 00:00:00+00')) STORED,
--- ADD COLUMN time_15min   TIMESTAMPTZ GENERATED ALWAYS AS (date_bin('15 minutes', time AT TIME ZONE 'UTC', '2000-01-01 00:00:00+00')) STORED,
--- ADD COLUMN time_1min    TIMESTAMPTZ GENERATED ALWAYS AS (date_bin('1 minutes',  time AT TIME ZONE 'UTC', '2000-01-01 00:00:00+00')) STORED,
--- ADD COLUMN time_1sec    TIMESTAMPTZ GENERATED ALWAYS AS (date_bin('1 seconds',  time AT TIME ZONE 'UTC', '2000-01-01 00:00:00+00')) STORED;
-
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1hr_topic_asc      ON mqtt_log(topic, time_1hr ASC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1hr_topic_desc     ON mqtt_log(topic, time_1hr DESC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_30min_topic_asc    ON mqtt_log(topic, time_30min ASC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_30min_topic_desc   ON mqtt_log(topic, time_30min DESC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_15min_topic_asc    ON mqtt_log(topic, time_15min ASC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_15min_topic_desc   ON mqtt_log(topic, time_15min DESC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1min_topic_asc     ON mqtt_log(topic, time_1min ASC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1min_topic_desc    ON mqtt_log(topic, time_1min DESC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1sec_topic_asc     ON mqtt_log(topic, time_1sec ASC);
--- CREATE INDEX IF NOT EXISTS idx_mqtt_log_time_1sec_topic_desc    ON mqtt_log(topic, time_1sec DESC);
-
-
+CREATE INDEX IF NOT EXISTS idx_watcher_heartbeat_time_id ON watcher_heartbeat (watcher_id, time DESC);
