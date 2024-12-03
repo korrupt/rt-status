@@ -3,8 +3,9 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 
 CREATE TABLE IF NOT EXISTS device (
     id uuid DEFAULT uuid_generate_v4(),
-    slug character varying COLLATE pg_catalog."default",
-    description character varying NOT NULL COLLATE pg_catalog."default",
+    slug character varying NOT NULL COLLATE pg_catalog."default",
+    name character varying NOT NULL COLLATE pg_catalog."default",
+    description character varying COLLATE pg_catalog."default",
     location GEOGRAPHY(Point),
 
     CONSTRAINT "PK_DEVICE_ID" PRIMARY KEY (id)
@@ -13,12 +14,14 @@ CREATE TABLE IF NOT EXISTS device (
 
 CREATE TABLE IF NOT EXISTS watcher (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
-    slug character varying COLLATE pg_catalog."default",
-    description character varying NOT NULL COLLATE pg_catalog."default",
+    slug character varying NOT NULL COLLATE pg_catalog."default",
+    name character varying NOT NULL COLLATE pg_catalog."default",
+    description character varying COLLATE pg_catalog."default",
 
     device_id uuid NOT NULL,
 
     CONSTRAINT "PK_WATCHER" PRIMARY KEY (id),
+    CONSTRAINT "UQ_WATCHER_SLUG" UNIQUE (device_id, slug),
     CONSTRAINT "FK_WATCHER_DEVICE" FOREIGN KEY (device_id)
         REFERENCES public."device" (id) MATCH SIMPLE
         ON UPDATE NO ACTION

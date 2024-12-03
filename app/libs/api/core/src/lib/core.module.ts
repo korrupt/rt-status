@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeormFeatureModule } from "@app/typeorm-feature";
-import { ServiceFeatureModule } from "@app/service-feature";
+import { DeviceFeatureModule } from "@app/device-feature";
 
 @Module({
   imports: [
     TypeormFeatureModule,
-    ServiceFeatureModule
+    DeviceFeatureModule
   ]
 })
 export class CoreModule {}

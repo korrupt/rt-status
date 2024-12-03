@@ -1,1 +1,1 @@
-export * from './lib/watcher-feature.module';
+export * from './lib/device-feature.module';

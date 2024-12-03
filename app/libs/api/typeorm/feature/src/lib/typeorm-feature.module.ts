@@ -1,6 +1,7 @@
 
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from "typeorm";
+import { Logger, Module, OnModuleInit } from '@nestjs/common';
+import { InjectDataSource, TypeOrmModule } from '@nestjs/typeorm';
 import { TypeormConfigModule, TypeormConfigService } from "@app/typeorm-config";
 
 @Module({
@@ -24,4 +25,14 @@ import { TypeormConfigModule, TypeormConfigService } from "@app/typeorm-config";
   ],
   exports: [TypeOrmModule],
 })
-export class TypeormFeatureModule {}
+export class TypeormFeatureModule implements OnModuleInit {
+  constructor(@InjectDataSource() private dataSource: DataSource){}
+
+  logger = new Logger(TypeormFeatureModule.name);
+
+  async onModuleInit() {
+    const entities = this.dataSource.options.entities;
+
+    this.logger.debug(`Initialized typeorm with ${entities?.length} entities.`);
+  }
+}
