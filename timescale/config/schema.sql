@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS device (
     description character varying COLLATE pg_catalog."default",
     location GEOGRAPHY(Point),
 
-    CONSTRAINT "PK_DEVICE_ID" PRIMARY KEY (id)
+    CONSTRAINT "PK_DEVICE_ID" PRIMARY KEY (id),
+    CONSTRAINT "UQ_DEVICE_SLUG" UNIQUE (slug)
 );
 
 

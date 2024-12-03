@@ -1,0 +1,3 @@
+@id = 024324a4-bdab-44c3-863a-94630deb6915
+
+GET  http://{{endpoint}}/device/{{id}}

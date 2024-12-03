@@ -1,0 +1,7 @@
+POST http://{{endpoint}}/device
+Content-Type: application/json
+
+{
+    "slug": "test-device",
+    "name": "Test Device"
+}
