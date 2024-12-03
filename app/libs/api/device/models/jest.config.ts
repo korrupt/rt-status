@@ -1,10 +1,10 @@
 export default {
-  displayName: 'watcher-data-access',
+  displayName: 'device-models',
   preset: '../../../../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../../../coverage/libs/api/watcher/data-access',
+  coverageDirectory: '../../../../coverage/libs/api/device/models',
 };

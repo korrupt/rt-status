@@ -1,7 +1,7 @@
 {
-  "name": "watcher-data-access",
+  "name": "device-data-access",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/api/watcher/data-access/src",
+  "sourceRoot": "libs/api/device/data-access/src",
   "projectType": "library",
   "tags": [],
   "// targets": "to see all targets run: nx show project watcher-data-access --web",

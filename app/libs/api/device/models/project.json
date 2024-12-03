@@ -1,0 +1,9 @@
+{
+  "name": "device-models",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/device/models/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project device-models --web",
+  "targets": {}
+}
