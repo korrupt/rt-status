@@ -1,12 +1,16 @@
 const nx = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
+const typescriptEslint = require('eslint-config-prettier');
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: typescriptEslint,
+});
 
 module.exports = [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
-  {
-    ignores: ['**/dist'],
-  },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -30,4 +34,5 @@ module.exports = [
     // Override or add rules here
     rules: {},
   },
+  ...compat.extends('plugin:prettier/recommended'),
 ];

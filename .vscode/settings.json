@@ -3,5 +3,16 @@
         "$shared": {
             "endpoint": "localhost:3000/api"
         }
-    }
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
+    "eslint.format.enable": true
 }
