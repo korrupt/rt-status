@@ -14,5 +14,9 @@
         "typescript",
         "typescriptreact"
     ],
-    "eslint.format.enable": true
+    "eslint.format.enable": true,
+    "editor.formatOnSave": true,
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
 }
