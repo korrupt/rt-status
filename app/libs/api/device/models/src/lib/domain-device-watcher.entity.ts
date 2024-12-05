@@ -1,11 +1,20 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, Unique } from "typeorm";
-import { DomainDeviceEntity } from "./domain-device.entity";
-
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  Unique,
+} from 'typeorm';
+import { DomainDeviceEntity } from './domain-device.entity';
 
 @Entity('domain_device_watcher')
-@Unique(DomainDeviceWatcherEntity.UQ_DOMAIN_DEVICE_WATCHER_SLUG, ['domain_id', 'device_id', 'slug'])
+@Unique(DomainDeviceWatcherEntity.UQ_DOMAIN_DEVICE_WATCHER_SLUG, [
+  'domain_id',
+  'device_id',
+  'slug',
+])
 export class DomainDeviceWatcherEntity {
-
   static UQ_DOMAIN_DEVICE_WATCHER_SLUG = 'UQ_DOMAIN_DEVICE_WATCHER_SLUG';
 
   @PrimaryColumn()

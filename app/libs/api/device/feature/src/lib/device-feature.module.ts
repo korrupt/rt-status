@@ -5,16 +5,23 @@ import {
   WatcherHeartbeatEntity,
   DomainEntity,
   DomainDeviceEntity,
-  DomainDeviceWatcherEntity
+  DomainDeviceWatcherEntity,
 } from '@app/device-models';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeviceController, DeviceService } from "@app/device-data-access";
+import { DeviceController, DeviceService } from '@app/device-data-access';
 
 @Module({
   controllers: [DeviceController],
-  imports: [TypeOrmModule.forFeature([DeviceEntity, WatcherEntity, WatcherHeartbeatEntity, DomainEntity, DomainDeviceEntity, DomainDeviceWatcherEntity])],
-  providers: [
-    DeviceService
-  ]
+  imports: [
+    TypeOrmModule.forFeature([
+      DeviceEntity,
+      WatcherEntity,
+      WatcherHeartbeatEntity,
+      DomainEntity,
+      DomainDeviceEntity,
+      DomainDeviceWatcherEntity,
+    ]),
+  ],
+  providers: [DeviceService],
 })
-export class DeviceFeatureModule  {}
+export class DeviceFeatureModule {}

@@ -1,5 +1,3 @@
-
-
 export interface CreateDeviceModel {
   slug: string;
   name: string;
@@ -9,7 +7,7 @@ export interface CreateDeviceModel {
 
 export type CreateDeviceResultModel = CreateDeviceModel & {
   id: string;
-}
+};
 
 export type UpdateDeviceModel = Partial<CreateDeviceModel>;
 
@@ -19,4 +17,4 @@ export type FindDeviceResultModel = FindDeviceByIdResultModel[];
 
 export type DeleteDeviceResultModel = {
   id: string;
-}
+};

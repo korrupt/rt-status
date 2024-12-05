@@ -31,5 +31,4 @@ export class WatcherEntity {
   @ManyToOne(() => DeviceEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'device_id' })
   device!: DeviceEntity;
-
 }

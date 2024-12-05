@@ -1,27 +1,33 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
-import { DeviceEntity } from "@app/device-models";
-import { CreateDeviceModel, CreateDeviceResultModel, DeleteDeviceResultModel, FindDeviceByIdResultModel, FindDeviceResultModel, UpdateDeviceModel } from "@app/shared-models";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { DeviceEntity } from '@app/device-models';
+import {
+  CreateDeviceModel,
+  CreateDeviceResultModel,
+  DeleteDeviceResultModel,
+  FindDeviceByIdResultModel,
+  FindDeviceResultModel,
+  UpdateDeviceModel,
+} from '@app/shared-models';
 
 @Injectable()
 export class DeviceService {
   constructor(
     @InjectDataSource() private dataSource: DataSource,
-    @InjectRepository(DeviceEntity) private device: Repository<DeviceEntity>
-  ){}
+    @InjectRepository(DeviceEntity) private device: Repository<DeviceEntity>,
+  ) {}
 
-  public async create(model: CreateDeviceModel): Promise<CreateDeviceResultModel> {
+  public async create(
+    model: CreateDeviceModel,
+  ): Promise<CreateDeviceResultModel> {
     return this.device.save(model);
   }
 
   public async find(model: unknown = {}): Promise<FindDeviceResultModel> {
     const qb = this.dataSource.createQueryBuilder();
 
-    return qb
-      .select('*')
-      .from(DeviceEntity, 'd')
-      .getRawMany();
+    return qb.select('*').from(DeviceEntity, 'd').getRawMany();
   }
 
   public async findById(id: string): Promise<FindDeviceByIdResultModel> {
@@ -34,7 +40,10 @@ export class DeviceService {
     return found;
   }
 
-  public async update(id: string, model: UpdateDeviceModel): Promise<FindDeviceByIdResultModel> {
+  public async update(
+    id: string,
+    model: UpdateDeviceModel,
+  ): Promise<FindDeviceByIdResultModel> {
     const found = await this.findById(id);
 
     return this.device.save({ ...found, ...model });
@@ -46,7 +55,6 @@ export class DeviceService {
 
     const _id = removed.id;
 
-    return { id: _id }
+    return { id: _id };
   }
-
 }

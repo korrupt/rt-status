@@ -17,6 +17,6 @@
     "eslint.format.enable": true,
     "editor.formatOnSave": true,
     "[json]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
     }
 }

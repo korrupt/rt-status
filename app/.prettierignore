@@ -5,8 +5,7 @@
 /.nx/workspace-data
 .angular
 
-/**/*.yaml
-/**/*.json
 
-/*.json
-/*.yaml
+*.yaml
+*.json
+

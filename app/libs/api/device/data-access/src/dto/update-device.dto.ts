@@ -1,5 +1,5 @@
-import { IsOptional, IsString } from "class-validator";
-import { UpdateDeviceModel } from "@app/shared-models";
+import { IsOptional, IsString } from 'class-validator';
+import { UpdateDeviceModel } from '@app/shared-models';
 
 export class UpdateDeviceDto implements UpdateDeviceModel {
   @IsOptional()

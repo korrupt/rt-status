@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { CreateDeviceModel } from "@app/shared-models";
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { CreateDeviceModel } from '@app/shared-models';
 
 export class CreateDeviceDto implements CreateDeviceModel {
   @IsNotEmpty()

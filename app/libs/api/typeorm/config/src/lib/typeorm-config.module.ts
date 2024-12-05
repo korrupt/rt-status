@@ -8,7 +8,9 @@ import { TypeormConfigService } from './typeorm-config.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      ...(process.env['ENV_FILE_PATH'] ? { envFilePath: process.env['ENV_FILE_PATH'] } : {}),
+      ...(process.env['ENV_FILE_PATH']
+        ? { envFilePath: process.env['ENV_FILE_PATH'] }
+        : {}),
       load: [configuration],
       validationSchema: Joi.object({
         POSTGRES_HOST: Joi.string().default('postgres'),
