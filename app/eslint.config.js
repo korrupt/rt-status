@@ -7,7 +7,12 @@ const compat = new FlatCompat({
   recommendedConfig: typescriptEslint,
 });
 
+console.log(nx.configs);
+
 module.exports = [
+  {
+    ignores: ['**/*.json', '*.json', 'tsconfig.base.json'],
+  },
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],

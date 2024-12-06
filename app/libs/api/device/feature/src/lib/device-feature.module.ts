@@ -8,10 +8,15 @@ import {
   DomainDeviceWatcherEntity,
 } from '@app/device-models';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DeviceController, DeviceService } from '@app/device-data-access';
+import {
+  DeviceController,
+  DeviceService,
+  WatcherController,
+  WatcherService,
+} from '@app/device-data-access';
 
 @Module({
-  controllers: [DeviceController],
+  controllers: [DeviceController, WatcherController],
   imports: [
     TypeOrmModule.forFeature([
       DeviceEntity,
@@ -22,6 +27,6 @@ import { DeviceController, DeviceService } from '@app/device-data-access';
       DomainDeviceWatcherEntity,
     ]),
   ],
-  providers: [DeviceService],
+  providers: [DeviceService, WatcherService],
 })
 export class DeviceFeatureModule {}
