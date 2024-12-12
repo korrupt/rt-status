@@ -57,4 +57,23 @@ export class WatcherService {
 
     return { id: _id };
   }
+
+  public async findFromDeviceId(
+    device_id: string,
+  ): Promise<FindWatcherResultModel> {
+    return this.watcher.findBy({ device_id });
+  }
+
+  public async findByIdFromDeviceId(
+    device_id: string,
+    id: string,
+  ): Promise<FindWatcherByIdResultModel> {
+    const found = await this.watcher.findOneBy({ device_id, id });
+
+    if (!found) {
+      throw new NotFoundException();
+    }
+
+    return found;
+  }
 }

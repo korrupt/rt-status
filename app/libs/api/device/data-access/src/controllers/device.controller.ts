@@ -14,11 +14,17 @@ import {
   DeleteDeviceResultModel,
   FindDeviceByIdResultModel,
   FindDeviceResultModel,
+  FindWatcherByIdResultModel,
+  FindWatcherResultModel,
 } from '@app/shared-models';
+import { WatcherService } from '../services';
 
 @Controller('device')
 export class DeviceController {
-  constructor(private device: DeviceService) {}
+  constructor(
+    private device: DeviceService,
+    private watcher: WatcherService,
+  ) {}
 
   @Post()
   public async create(@Body() dto: CreateDeviceDto) {
@@ -50,5 +56,21 @@ export class DeviceController {
     @Param('id') id: string,
   ): Promise<DeleteDeviceResultModel> {
     return this.device.delete(id);
+  }
+
+  @Get(':id/watcher')
+  public async findDeviceWatchers(
+    @Param('id') id: string,
+  ): Promise<FindWatcherResultModel> {
+    const device = await this.findById(id);
+    return this.watcher.findFromDeviceId(device.id);
+  }
+
+  @Get(':id/watcher/:watcher_id')
+  public async findDeviceWatcherById(
+    @Param('id') id: string,
+    @Param('watcher_id') watcher_id: string,
+  ): Promise<FindWatcherByIdResultModel> {
+    return this.watcher.findByIdFromDeviceId(id, watcher_id);
   }
 }
