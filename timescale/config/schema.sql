@@ -31,14 +31,39 @@ CREATE TABLE IF NOT EXISTS watcher (
 
 CREATE TABLE IF NOT EXISTS watcher_heartbeat (
     time TIMESTAMPTZ NOT NULL,
-    data JSON DEFAULT '{}',
     watcher_id uuid NOT NULL,
+    status TEXT NOT NULL,
+    type TEXT NOT NULl,
+    metadata JSONB DEFAULT '{}',
 
     CONSTRAINT "FK_WATCHER_HEARTBEAT_WATCHER" FOREIGN KEY (watcher_id)
         REFERENCES public.watcher (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT "PK_WATCHER_HEARTBEAT" PRIMARY KEY (time, watcher_id)
 );
+
+CREATE INDEX IF NOT EXISTS IDX_WATCHER_HEARTBEAT_TIME_WATCHER_ID ON watcher_heartbeat (watcher_id, time DESC);
+
+CREATE TABLE IF NOT EXISTS watcher_log (
+    time TIMESTAMPTZ NOT NULL,
+    watcher_id uuid NOT NULL,
+    severity TEXT NOT NULL,
+    scope TEXT NOT NULL,
+    message TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}',
+
+    CONSTRAINT "FK_WATCHER_LOG_WATCHER" FOREIGN KEY (watcher_id)
+        REFERENCES public.watcher (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT "PK_WATCHER_LOG" PRIMARY KEY (time, watcher_id)
+);
+
+CREATE INDEX IF NOT EXISTS IDX_WATCHER_LOG_TIME_WATCHER_ID ON watcher_heartbeat (watcher_id, time DESC);
+
+
+
 
 -- CREATE TABLE IF NOT EXISTS domain (
 --     id uuid DEFAULT uuid_generate_v4(),
@@ -107,5 +132,3 @@ ALTER TABLE watcher_heartbeat SET (timescaledb.compress,
 
 SELECT add_compression_policy('watcher_heartbeat', compress_after => INTERVAL '60d');
 SELECT add_retention_policy('watcher_heartbeat', INTERVAL '6 months');
-
-CREATE INDEX IF NOT EXISTS idx_watcher_heartbeat_time_id ON watcher_heartbeat (watcher_id, time DESC);
