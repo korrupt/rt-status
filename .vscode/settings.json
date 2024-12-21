@@ -18,5 +18,8 @@
     "editor.formatOnSave": true,
     "[json]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[sql]": {
+        "editor.formatOnSave": false
     }
 }
