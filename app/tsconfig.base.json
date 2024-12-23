@@ -24,6 +24,7 @@
       "@app/device-models": ["libs/api/device/models/src/index.ts"],
       "@app/shared-models": ["libs/shared/models/src/index.ts"],
       "@app/typeorm-config": ["libs/api/typeorm/config/src/index.ts"],
+      "@app/typeorm-data-access": ["libs/api/typeorm/data-access/src/index.ts"],
       "@app/typeorm-feature": ["libs/api/typeorm/feature/src/index.ts"],
       "@app/user-data-access": ["libs/api/user/data-access/src/index.ts"],
       "@app/user-feature": ["libs/api/user/feature/src/index.ts"],
