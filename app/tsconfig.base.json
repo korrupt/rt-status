@@ -15,6 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@app/auth-data-access": ["libs/api/auth/data-access/src/index.ts"],
+      "@app/auth-feature": ["libs/api/auth/feature/src/index.ts"],
+      "@app/auth-models": ["libs/api/auth/models/src/index.ts"],
       "@app/core": ["libs/api/core/src/index.ts"],
       "@app/device-data-access": ["libs/api/device/data-access/src/index.ts"],
       "@app/device-feature": ["libs/api/device/feature/src/index.ts"],

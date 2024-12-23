@@ -1,1 +1,2 @@
-export * from './lib/user-data-access.module';
+export * from './lib/services';
+export * from './lib/controllers';
