@@ -1,0 +1,8 @@
+POST http://{{endpoint}}/auth/local/register
+Content-Type: application/json
+
+{
+    "name": "Test User",
+    "email": "test@test.com",
+    "password": "123"
+}

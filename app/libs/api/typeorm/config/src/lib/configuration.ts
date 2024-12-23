@@ -6,5 +6,5 @@ export default registerAs('typeorm', () => ({
   USER: process.env['POSTGRES_USER'],
   PASSWORD: process.env['POSTGRES_PASSWORD'],
   DATABASE: process.env['POSTGRES_DATABASE'],
-  SYNC: process.env['POSTGRES_SYNC'] == 'true',
+  SYNC: process.env['TYPEORM_SYNC'] == 'true',
 }));

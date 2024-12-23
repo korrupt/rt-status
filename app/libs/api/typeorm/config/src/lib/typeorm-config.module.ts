@@ -18,7 +18,7 @@ import { TypeormConfigService } from './typeorm-config.service';
         POSTGRES_USER: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
         POSTGRES_DATABASE: Joi.string().required(),
-        POSTGRES_SYNC: Joi.boolean().default(false),
+        TYPEORM_SYNC: Joi.boolean().default(false),
       }),
     }),
   ],
