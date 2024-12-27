@@ -7,10 +7,14 @@ import {
   AuthLocalController,
   EmailAlreadyUsedInterceptor,
 } from '@app/auth-data-access';
+import { AuthConfigModule } from '@app/auth-config';
 
 @Module({
   controllers: [AuthLocalController],
-  imports: [TypeOrmModule.forFeature([AuthLocalEntity, AuthkeyEntity])],
+  imports: [
+    TypeOrmModule.forFeature([AuthLocalEntity, AuthkeyEntity]),
+    AuthConfigModule,
+  ],
   providers: [
     AuthLocalService,
     EmailAlreadyUsedInterceptor,
