@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
 import {
@@ -6,6 +10,7 @@ import {
   AuthLocalRegisterModel,
   AuthLocalRegisterResultModel,
 } from '@app/shared-models';
+import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcryptjs';
 
 import { UserEntity } from '@app/user-models';
@@ -13,7 +18,10 @@ import { AuthLocalEntity } from '@app/auth-models';
 
 @Injectable()
 export class AuthLocalService {
-  constructor(@InjectDataSource() private dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private dataSource: DataSource,
+    private jwtService: JwtService,
+  ) {}
 
   public async register(
     model: AuthLocalRegisterModel,
@@ -46,6 +54,16 @@ export class AuthLocalService {
       throw new NotFoundException();
     }
 
-    return { access_token: '' };
+    const user = await this.dataSource
+      .getRepository(UserEntity)
+      .findOneBy({ id: auth_local.user_id });
+
+    if (!user) {
+      throw new InternalServerErrorException(`AuthLocal has no user`);
+    }
+
+    const payload = await this.jwtService.signAsync({ sub: user.id });
+
+    return { access_token: payload };
   }
 }

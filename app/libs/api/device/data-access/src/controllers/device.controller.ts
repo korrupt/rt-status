@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { DeviceService } from '../services/device.service';
 import { CreateDeviceDto, UpdateDeviceDto } from '../dto';
@@ -18,8 +19,10 @@ import {
   FindWatcherResultModel,
 } from '@app/shared-models';
 import { WatcherService } from '../services';
+import { JwtGuard } from '@app/auth-data-access';
 
 @Controller('device')
+@UseGuards(JwtGuard)
 export class DeviceController {
   constructor(
     private device: DeviceService,

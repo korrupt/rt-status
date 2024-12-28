@@ -6,18 +6,42 @@ import {
   AuthLocalService,
   AuthLocalController,
   EmailAlreadyUsedInterceptor,
+  JwtGuard,
+  JwtStrategy,
+  AuthKeyGuard,
 } from '@app/auth-data-access';
+import { AuthConfigModule, AuthConfigService } from '@app/auth-config';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   controllers: [AuthLocalController],
-  imports: [TypeOrmModule.forFeature([AuthLocalEntity, AuthkeyEntity])],
+  imports: [
+    TypeOrmModule.forFeature([AuthLocalEntity, AuthkeyEntity]),
+    AuthConfigModule,
+    PassportModule,
+    JwtModule.registerAsync({
+      imports: [AuthConfigModule],
+      inject: [AuthConfigService],
+      useFactory: (config: AuthConfigService) => ({
+        secret: config.JWT_SECRET,
+        signOptions: {
+          expiresIn: config.JWT_EXPIRES_IN,
+        },
+      }),
+    }),
+  ],
   providers: [
     AuthLocalService,
     EmailAlreadyUsedInterceptor,
+    JwtStrategy,
+    JwtGuard,
+    AuthKeyGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: EmailAlreadyUsedInterceptor,
     },
   ],
+  exports: [JwtGuard],
 })
 export class AuthFeatureModule {}
