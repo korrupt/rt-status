@@ -8,6 +8,7 @@ import {
   EmailAlreadyUsedInterceptor,
   JwtGuard,
   JwtStrategy,
+  AuthKeyGuard,
 } from '@app/auth-data-access';
 import { AuthConfigModule, AuthConfigService } from '@app/auth-config';
 import { PassportModule } from '@nestjs/passport';
@@ -33,8 +34,9 @@ import { JwtModule } from '@nestjs/jwt';
   providers: [
     AuthLocalService,
     EmailAlreadyUsedInterceptor,
-    JwtGuard,
     JwtStrategy,
+    JwtGuard,
+    AuthKeyGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: EmailAlreadyUsedInterceptor,
