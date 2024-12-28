@@ -1,7 +1,8 @@
 {
     "rest-client.environmentVariables":{
         "$shared": {
-            "endpoint": "localhost:3000/api"
+            "endpoint": "localhost:3000/api",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5YmYxODczOC04NWZmLTQzNDMtYTAxOC03NWEwZThlMDBkNDYiLCJpYXQiOjE3MzUzOTE2MjcsImV4cCI6MTczNTM5NTIyN30.ZQBH36vAlbau6Mi5uOWsywxLpo_L01Yy6qm6pNkeB8M"
         }
     },
     "editor.codeActionsOnSave": {
