@@ -1,19 +1,14 @@
-import { AuthkeyEntity } from '@app/auth-models';
 import {
   CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { AuthKeyService } from '../services/auth-key.service';
 
 @Injectable()
 export class AuthKeyGuard implements CanActivate {
-  constructor(
-    @InjectRepository(AuthkeyEntity)
-    private auth_key: Repository<AuthkeyEntity>,
-  ) {}
+  constructor(private authKeyService: AuthKeyService) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
@@ -24,19 +19,14 @@ export class AuthKeyGuard implements CanActivate {
       throw new UnauthorizedException(`Missing auth-key header`);
     }
 
-    const auth_key = await this.auth_key.findOneBy({ key: payload });
+    const user = await this.authKeyService.signinWithAuthKey(payload);
 
-    if (!auth_key) {
-      throw new UnauthorizedException(`Auth key not valid`);
-    }
-
-    if (auth_key.expires_at && Date.now() > auth_key.expires_at.getTime()) {
-      throw new UnauthorizedException(`Key expired`);
-    }
-
-    if (auth_key.revoked_at) {
-      throw new UnauthorizedException(`Key revoked`);
-    }
+    Object.defineProperty(req, 'user', {
+      value: user,
+      enumerable: true,
+      configurable: true,
+      writable: false,
+    });
 
     return true;
   }
