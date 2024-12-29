@@ -1,0 +1,7 @@
+POST http://{{endpoint}}/auth-key
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "watcher_id": "dd9bed11-7e76-40af-8834-a5033a6e2bdd"
+}
