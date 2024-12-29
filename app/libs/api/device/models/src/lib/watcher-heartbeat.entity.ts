@@ -6,11 +6,17 @@ export class WatcherHeartbeatEntity {
   @PrimaryColumn({ name: 'time' })
   time!: Date;
 
-  @Column({ name: 'watcher_id' })
+  @PrimaryColumn({ name: 'watcher_id' })
   watcher_id!: string;
 
-  @Column({ type: 'jsonb', name: 'data' })
-  data!: JSON;
+  @Column()
+  status!: string;
+
+  @Column()
+  type!: string;
+
+  @Column({ type: 'jsonb', name: 'metadata' })
+  metadata!: JSON;
 
   @ManyToOne(() => WatcherEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'watcher_id' })

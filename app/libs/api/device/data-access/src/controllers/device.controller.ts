@@ -7,9 +7,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { DeviceService } from '../services/device.service';
-import { CreateDeviceDto, UpdateDeviceDto } from '../dto';
+import {
+  CreateDeviceDto,
+  CreateDeviceWatcherDto,
+  UpdateDeviceDto,
+} from '../dto';
 import {
   DeleteDeviceResultModel,
   FindDeviceByIdResultModel,
@@ -18,8 +23,10 @@ import {
   FindWatcherResultModel,
 } from '@app/shared-models';
 import { WatcherService } from '../services';
+import { JwtGuard } from '@app/auth-data-access';
 
 @Controller('device')
+@UseGuards(JwtGuard)
 export class DeviceController {
   constructor(
     private device: DeviceService,
@@ -56,6 +63,14 @@ export class DeviceController {
     @Param('id') id: string,
   ): Promise<DeleteDeviceResultModel> {
     return this.device.delete(id);
+  }
+
+  @Post(':id/watcher')
+  public async createDeviceWatcher(
+    @Param('id') device_id: string,
+    @Body() dto: CreateDeviceWatcherDto,
+  ) {
+    return this.watcher.create({ ...dto, device_id });
   }
 
   @Get(':id/watcher')

@@ -1,5 +1,10 @@
-import { DeviceEntity, WatcherEntity } from '@app/device-models';
 import {
+  DeviceEntity,
+  WatcherEntity,
+  WatcherHeartbeatEntity,
+} from '@app/device-models';
+import {
+  CreateWatcherHeartbeatModel,
   CreateWatcherModel,
   CreateWatcherResultModel,
   DeleteWatcherResultModel,
@@ -18,6 +23,8 @@ export class WatcherService {
     @InjectDataSource() private dataSource: DataSource,
     @InjectRepository(WatcherEntity) private watcher: Repository<WatcherEntity>,
     @InjectRepository(DeviceEntity) private device: Repository<DeviceEntity>,
+    @InjectRepository(WatcherHeartbeatEntity)
+    private watcherHeartbeat: Repository<WatcherHeartbeatEntity>,
   ) {}
 
   public async create(
@@ -75,5 +82,11 @@ export class WatcherService {
     }
 
     return found;
+  }
+
+  public async createWatcherHeartbeat(
+    model: CreateWatcherHeartbeatModel,
+  ): Promise<void> {
+    await this.watcherHeartbeat.save({ ...model, time: new Date() });
   }
 }

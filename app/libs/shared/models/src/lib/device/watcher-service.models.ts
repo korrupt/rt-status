@@ -17,3 +17,10 @@ export type UpdateWatcherModel = Partial<CreateWatcherModel>;
 export type UpdateWatcherResultModel = CreateWatcherResultModel;
 
 export type DeleteWatcherResultModel = { id: string };
+
+export interface CreateWatcherHeartbeatModel<T extends object = object> {
+  status: string;
+  type: string;
+  metadata: T;
+  watcher_id: string;
+}

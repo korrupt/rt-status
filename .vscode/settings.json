@@ -1,7 +1,9 @@
 {
     "rest-client.environmentVariables":{
         "$shared": {
-            "endpoint": "localhost:3000/api"
+            "endpoint": "localhost:3000/api",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5YmYxODczOC04NWZmLTQzNDMtYTAxOC03NWEwZThlMDBkNDYiLCJpYXQiOjE3MzU0ODE5MjcsImV4cCI6MTczNTQ4NTUyN30.WokCybZUSZrN4Evzjcf-Dcy2AbAieMo6q-hIuh0NfLM",
+            "auth-key": "647ce7d6bb9c0d45e3bb4e64c76cade668adfc2b101961d997f70f0464463328"
         }
     },
     "editor.codeActionsOnSave": {
@@ -18,5 +20,8 @@
     "editor.formatOnSave": true,
     "[json]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
+    },
+    "[sql]": {
+        "editor.formatOnSave": false
     }
 }
