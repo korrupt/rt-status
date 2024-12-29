@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthKeyService } from '../services/auth-key.service';
+import type { Request } from 'express';
 
 @Injectable()
 export class AuthKeyGuard implements CanActivate {
@@ -13,9 +14,9 @@ export class AuthKeyGuard implements CanActivate {
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
 
-    const payload = req.headers.get('auth-key');
+    const payload = req.headers['auth-key'];
 
-    if (!payload) {
+    if (!payload || typeof payload == 'object') {
       throw new UnauthorizedException(`Missing auth-key header`);
     }
 

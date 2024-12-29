@@ -1,7 +1,9 @@
 import { CreateWatcherModel } from '@app/shared-models';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreateWatcherDto implements CreateWatcherModel {
+export class CreateDeviceWatcherDto
+  implements Omit<CreateWatcherModel, 'device_id'>
+{
   @IsNotEmpty()
   @IsString() // TODO: enforce slug
   slug!: string;
@@ -13,8 +15,4 @@ export class CreateWatcherDto implements CreateWatcherModel {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  device_id!: string;
 }

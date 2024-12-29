@@ -21,6 +21,7 @@ import { DeviceService } from '../services';
 //   UpdateWatcherResultModel,
 // } from '@app/shared-models';
 import { AuthKeyGuard } from '@app/auth-data-access';
+import { CreateWatcherHeartbeatDto } from '../dto';
 
 @Controller('watcher')
 @UseGuards(AuthKeyGuard)
@@ -31,8 +32,11 @@ export class WatcherController {
   ) {}
 
   @Post('heartbeat')
-  public async publishHeartbeat(@Req() req: Request & { user: any }) {
-    console.log(req);
+  public async publishHeartbeat(
+    @Req() req: Request & { user: { watcher_id: string } },
+    @Body() dto: CreateWatcherHeartbeatDto,
+  ) {
+    return this.watcher.createWatcherHeartbeat({ ...dto, ...req.user });
   }
 
   //   @Post()

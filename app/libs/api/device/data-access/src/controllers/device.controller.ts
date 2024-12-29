@@ -10,7 +10,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DeviceService } from '../services/device.service';
-import { CreateDeviceDto, UpdateDeviceDto } from '../dto';
+import {
+  CreateDeviceDto,
+  CreateDeviceWatcherDto,
+  UpdateDeviceDto,
+} from '../dto';
 import {
   DeleteDeviceResultModel,
   FindDeviceByIdResultModel,
@@ -59,6 +63,14 @@ export class DeviceController {
     @Param('id') id: string,
   ): Promise<DeleteDeviceResultModel> {
     return this.device.delete(id);
+  }
+
+  @Post(':id/watcher')
+  public async createDeviceWatcher(
+    @Param('id') device_id: string,
+    @Body() dto: CreateDeviceWatcherDto,
+  ) {
+    return this.watcher.create({ ...dto, device_id });
   }
 
   @Get(':id/watcher')

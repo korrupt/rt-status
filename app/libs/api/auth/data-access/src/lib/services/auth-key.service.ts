@@ -3,9 +3,14 @@ import {
   CreateAuthKeyModel,
   CreateAuthKeyResultModel,
 } from '@app/shared-models';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthKeyService {
@@ -17,7 +22,32 @@ export class AuthKeyService {
   public async createAuthkey(
     model: CreateAuthKeyModel,
   ): Promise<CreateAuthKeyResultModel> {
-    return await this.auth_key.save(model);
+    const max_attempts = 5;
+    let attempts = 0;
+
+    let entity: AuthkeyEntity | null = null;
+    while (attempts < max_attempts) {
+      try {
+        const key = randomBytes(32).toString('hex');
+        entity = await this.auth_key.save({
+          ...model,
+          key,
+          last_used_at: new Date(),
+        });
+        break;
+      } catch (err: unknown) {
+        console.error(err);
+
+        entity = null;
+        attempts++;
+      }
+    }
+
+    if (!entity) {
+      throw new InternalServerErrorException(`Could not generate key`);
+    }
+
+    return entity;
   }
 
   public async signinWithAuthKey(key: string): Promise<{ watcher_id: string }> {

@@ -1,0 +1,9 @@
+POST http://{{endpoint}}/watcher/heartbeat
+Content-Type: application/json
+auth-key: {{auth-key}}
+
+{
+    "metadata": {},
+    "status": "Active",
+    "type": "test"
+}

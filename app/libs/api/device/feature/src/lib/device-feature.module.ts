@@ -14,10 +14,12 @@ import {
   WatcherController,
   WatcherService,
 } from '@app/device-data-access';
+import { AuthFeatureModule } from '@app/auth-feature';
 
 @Module({
   controllers: [DeviceController, WatcherController],
   imports: [
+    AuthFeatureModule,
     TypeOrmModule.forFeature([
       DeviceEntity,
       WatcherEntity,

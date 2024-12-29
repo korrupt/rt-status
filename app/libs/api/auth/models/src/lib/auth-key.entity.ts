@@ -38,5 +38,8 @@ export class AuthkeyEntity {
 
   @ManyToOne(() => WatcherEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'watcher_id' })
+  watcher!: WatcherEntity;
+
+  @Column({ name: 'watcher_id' })
   watcher_id!: string;
 }

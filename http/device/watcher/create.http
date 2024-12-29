@@ -1,0 +1,10 @@
+@id = 4752311c-7480-4347-82b9-759fcb9085b8
+
+POST http://{{endpoint}}/device/{{id}}/watcher
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "slug": "test-watcher",
+    "name": "Test Watcher"
+}

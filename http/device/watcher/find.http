@@ -1,0 +1,4 @@
+@id = 4752311c-7480-4347-82b9-759fcb9085b8
+
+GET http://{{endpoint}}/device/{{id}}/watcher
+Authorization: Bearer {{token}}
