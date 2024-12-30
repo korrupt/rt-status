@@ -23,5 +23,8 @@
     },
     "[sql]": {
         "editor.formatOnSave": false
-    }
+    },
+    "rust-analyzer.linkedProjects": [
+        "clients/Cargo.toml"
+    ]
 }
