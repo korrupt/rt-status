@@ -1,9 +1,11 @@
 [workspace]
 members = [
     "heartbeat",
-    "publisher-http"
+    "publisher-http",
+    "rt-systemd"
 ]
 version = "0.1"
+resolver = "2"
 
 [workspace.dependencies]
 serde = { version = "1.0.217", features = ["derive"] }
