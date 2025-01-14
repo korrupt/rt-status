@@ -1,5 +1,13 @@
-use futures_util::stream::StreamExt;
-use zbus::{proxy, zvariant::OwnedObjectPath, Connection};
+use std::pin::Pin;
+use watcher::WatcherState;
+
+use futures_util::{stream::StreamExt, Stream};
+use zbus::{
+    fdo::PropertiesProxy,
+    proxy,
+    zvariant::{OwnedObjectPath, Value},
+    Connection,
+};
 
 #[proxy(
     interface = "org.freedesktop.systemd1.Manager",
@@ -11,81 +19,97 @@ trait SystemdManager {
     fn subscribe(&self) -> zbus::Result<()>;
 }
 
-#[proxy(interface = "org.freedesktop.systemd1.Unit")]
+#[proxy(
+    interface = "org.freedesktop.systemd1.Unit",
+    default_service = "org.freedesktop.systemd1"
+)]
 trait SystemdUnit {
     #[zbus(property)]
     fn active_state(&self) -> zbus::Result<String>;
     #[zbus(property)]
     fn sub_state(&self) -> zbus::Result<String>;
+    #[zbus(property)]
+    fn active_enter_timestamp(&self) -> zbus::Result<zbus::zvariant::Value>;
+    #[zbus(property)]
+    fn inactive_enter_timestamp(&self) -> zbus::Result<zbus::zvariant::Value>;
 }
 
-enum SystemdError {
+#[derive(Debug, Clone)]
+pub enum SystemdError {
     Zbus(zbus::Error),
+    Other(String),
 }
 
-struct SystemdWatcher<'a> {
+impl From<zbus::Error> for SystemdError {
+    fn from(value: zbus::Error) -> Self {
+        SystemdError::Zbus(value)
+    }
+}
+
+pub struct SystemdWatcher<'a> {
     unit: SystemdUnitProxy<'a>,
     manager: SystemdManagerProxy<'a>,
+    properties: PropertiesProxy<'a>,
 }
 
 impl SystemdWatcher<'_> {
-    pub async fn new() {}
-}
+    pub async fn new<'a>(service: &str) -> Result<SystemdWatcher<'a>, SystemdError> {
+        let conn = Connection::system().await?;
+        let manager = SystemdManagerProxy::new(&conn).await?;
 
-pub async fn load_unit() -> zbus::Result<()> {
-    let conn = Connection::system().await?;
-    let manager = SystemdManagerProxy::new(&conn).await?;
+        manager.subscribe().await?;
 
-    let service = manager.load_unit("rust-modbus.service").await?;
+        let path = manager.load_unit(service).await?;
 
-    println!("Path: {}", service);
+        let properties =
+            zbus::fdo::PropertiesProxy::new(&conn, "org.freedesktop.systemd1", path.clone())
+                .await?;
 
-    Ok(())
-}
+        let unit = SystemdUnitProxy::new(&conn, path.clone()).await?;
 
-pub async fn properties_changed() -> zbus::Result<()> {
-    let conn = Connection::system().await?;
-    let manager = SystemdManagerProxy::new(&conn).await?;
-
-    manager.subscribe().await?;
-
-    let props = zbus::fdo::PropertiesProxy::builder(&conn)
-        .destination("org.freedesktop.systemd1")?
-        .path("/org/freedesktop/systemd1/unit/rust_2dmodbus_2eservice")?
-        .build()
-        .await?;
-
-    let mut props_changed = props.receive_properties_changed().await?;
-
-    while let Some(signal) = props_changed.next().await {
-        let args = signal.args()?;
-
-        for (name, value) in args.changed_properties().iter() {
-            println!(
-                "{}.{} changed to `{:?}`",
-                args.interface_name(),
-                name,
-                value
-            );
-        }
+        Ok(SystemdWatcher {
+            unit,
+            manager,
+            properties,
+        })
     }
+}
 
-    Ok(())
+impl<'a> SystemdWatcher<'a> {
+    pub async fn properties_stream(
+        &mut self,
+    ) -> Pin<Box<dyn Stream<Item = Result<WatcherState, SystemdError>> + Send + '_>> {
+        // Move the streams into the function to avoid borrowing issues
+        let active_state_stream = self.unit.receive_active_state_changed().await;
+        let active_enter_timestamp_stream =
+            self.unit.receive_active_enter_timestamp_changed().await;
+
+        // Combine the streams and process their values
+        let combined_stream = active_state_stream.zip(active_enter_timestamp_stream).then(
+            |(state, timestamp)| async move {
+                // Extract timestamp
+                let t = match timestamp.get().await {
+                    Ok(Value::U64(t)) => t,
+                    _ => return Err(SystemdError::Other("Unexpected timestamp value".into())),
+                };
+
+                // Extract state
+                let state = match state.get().await {
+                    Ok(s) if s.as_str() == "active" => WatcherState::Active(t),
+                    Ok(_) => WatcherState::Inactive,
+                    Err(e) => return Err(e.into()),
+                };
+
+                Ok(state)
+            },
+        );
+
+        // Box the stream to unify the return type
+        Box::pin(combined_stream)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
-    use systemd::{load_unit, properties_changed};
 
-    type Error = Box<dyn std::error::Error>;
-
-    #[tokio::test]
-    pub async fn test_zbus() -> zbus::Result<()> {
-        // properties_changed().await?;
-
-        load_unit().await.unwrap();
-
-        Ok(())
-    }
 }

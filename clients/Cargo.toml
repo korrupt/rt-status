@@ -2,6 +2,7 @@
 members = [
     "heartbeat",
     "publisher-http",
+    "watcher",
     "rt-systemd"
 ]
 version = "0.1"
@@ -10,3 +11,4 @@ resolver = "2"
 [workspace.dependencies]
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
+futures-util = "0.3.31"

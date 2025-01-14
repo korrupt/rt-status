@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.23", features = ["derive"] }
-futures-util = "0.3.31"
+futures-util = { workspace = true }
+watcher = { path = "../watcher" }
 tokio = { version = "1.42.0", features = ["full"] }
+tokio-stream = "0.1.17"
 zbus = "5.2.0"
+debounced = "0.2.0"

@@ -1,0 +1,9 @@
+[package]
+name = "watcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures-util = { workspace = true }
+heartbeat = { path = "../heartbeat" }
+serde = { workspace = true }
