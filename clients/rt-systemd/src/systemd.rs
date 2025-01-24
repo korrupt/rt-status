@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::{
     pin::Pin,
     str::FromStr,
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::{
     sync::mpsc::Sender,
     time::{interval, Interval},
 };
 use tokio_stream::wrappers::IntervalStream;
-use watcher::{Watcher, WatcherState};
+use watcher::{WatcherInner, WatcherState};
 
 use futures_util::{join, stream::StreamExt, Stream};
 use zbus::{
@@ -79,10 +79,24 @@ trait SystemdUnit {
     fn inactive_enter_timestamp(&self) -> zbus::Result<zbus::zvariant::Value>;
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum WatcherError {
+    ExceededRetryLimit,
+}
+
 #[derive(Debug, Clone)]
 pub enum SystemdError {
     Zbus(zbus::Error),
     Other(String),
+}
+
+impl std::fmt::Display for SystemdError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            SystemdError::Other(reason) => f.write_str(&format!("other: {}", reason)),
+            SystemdError::Zbus(error) => f.write_str(&format!("zbus: {}", error)),
+        }
+    }
 }
 
 impl From<zbus::Error> for SystemdError {
@@ -115,11 +129,7 @@ impl SystemdWatcher<'_> {
 
         let unit = SystemdUnitProxy::new(&conn, path.clone()).await?;
 
-        Ok(SystemdWatcher {
-            unit,
-            service,
-            // properties,
-        })
+        Ok(SystemdWatcher { unit, service })
     }
 }
 
@@ -173,75 +183,94 @@ impl<'a> SystemdWatcher<'a> {
 pub async fn run<M: Into<String>>(
     service: M,
     sender: Sender<WatcherState>,
-) -> Result<(), SystemdError> {
+    send_interval: u64,
+) -> Result<(), WatcherError> {
     let service = service.into();
+    let duration = Duration::from_secs(send_interval.clone());
 
-    let duration = Duration::from_secs(1);
-    let interval = interval(duration);
-
-    let mut tries = 0;
+    let max_retries: usize = 10;
+    let mut retry_count = 0;
+    let mut retry_delay = Duration::from_millis(100);
 
     loop {
         // retur early
-        if tries > 3 {}
+        if retry_count > max_retries {
+            return Err(WatcherError::ExceededRetryLimit);
+        }
 
         let watcher = match SystemdWatcher::new(service.as_str()).await {
             Ok(watcher) => watcher,
             Err(e) => {
-                eprintln!("Err: {:?}", e);
+                retry_count += 1;
+
+                sender
+                    .send(WatcherState::Restarting(
+                        retry_count,
+                        retry_delay.as_millis() as u64,
+                        e.to_string(),
+                    ))
+                    .await
+                    .unwrap();
+
+                tokio::time::sleep(retry_delay).await;
+
+                retry_delay *= 2;
                 continue;
             }
         };
 
+        let interval = interval(duration.clone());
         let mut stream = watcher.property_stream(interval);
 
-        let mut exit_time = None;
+        let mut exit_time: Option<SystemTime> = None;
         let mut has_been_active = false;
 
         while let Some(item) = stream.next().await {
             match item {
-                Ok((active_state, uptime, exit_code, status_text)) => match active_state {
-                    ActiveStateString::Active => {
-                        has_been_active = true;
-                        exit_time = None; // reset exit_time
+                Ok((active_state, uptime, exit_code, status_text)) => {
+                    sender
+                        .send(WatcherState::Connected(match active_state {
+                            ActiveStateString::Active => {
+                                has_been_active = true;
+                                exit_time = None;
 
-                        let uptime = uptime / 1000 / 1000; // micros -> secs
+                                let uptime = uptime / 1000 / 1000; // micros -> secs
 
-                        sender.send(WatcherState::Active(uptime)).await.unwrap();
-                    }
-
-                    ActiveStateString::Failed | ActiveStateString::Inactive => {
-                        let epoch = if has_been_active {
-                            exit_time
-                                .get_or_insert(SystemTime::now())
-                                .duration_since(UNIX_EPOCH)
-                                .ok()
-                                .map(|duration| duration.as_secs())
-                        } else {
-                            None
-                        };
-
-                        let watcher_state = match active_state {
-                            ActiveStateString::Failed => {
-                                WatcherState::Failed(epoch, exit_code, status_text)
+                                WatcherInner::Active(uptime)
                             }
-                            ActiveStateString::Inactive => {
-                                WatcherState::Inactive(epoch, exit_code, status_text)
-                            }
-                            _ => unreachable!(),
-                        };
+                            ActiveStateString::Failed | ActiveStateString::Inactive => {
+                                let epoch = if has_been_active {
+                                    exit_time
+                                        .get_or_insert(SystemTime::now())
+                                        .duration_since(UNIX_EPOCH)
+                                        .ok()
+                                        .map(|duration| duration.as_secs())
+                                } else {
+                                    None
+                                };
 
-                        sender.send(watcher_state).await.unwrap();
-                    }
-                    // ActiveStateString::Reloading
-                    // ActiveStateString::Deactivating
-                    // | ActiveStateString::Failed
-                    // | ActiveStateString::Inactive => sender.send(WatcherState),
-                    _ => todo!("finish"),
-                },
+                                match active_state {
+                                    ActiveStateString::Failed => {
+                                        WatcherInner::Failed(epoch, exit_code, status_text)
+                                    }
+                                    ActiveStateString::Inactive => {
+                                        WatcherInner::Inactive(epoch, exit_code, status_text)
+                                    }
+                                    _ => unreachable!(),
+                                }
+                            }
+                            ActiveStateString::Activating => WatcherInner::Activating,
+                            ActiveStateString::Deactivating => WatcherInner::Deactivating,
+                            ActiveStateString::Reloading => WatcherInner::Reloading,
+                        }))
+                        .await
+                        .unwrap();
+                }
                 Err(e) => {
-                    println!("Consumer error: {:?}", e);
-                    continue;
+                    sender
+                        .send(WatcherState::Connected(WatcherInner::Other(e.to_string())))
+                        .await
+                        .unwrap();
                 }
             }
         }

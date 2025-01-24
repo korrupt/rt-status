@@ -1,6 +1,5 @@
 use clap::Parser;
 use futures_util::StreamExt;
-use systemd::{ActiveStateString, SystemdError, SystemdWatcher};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use watcher::WatcherState;
@@ -21,29 +20,8 @@ async fn main() {
     let (tx, rx) = mpsc::channel::<WatcherState>(10);
     let service = args.service;
 
-    let watcher_task = tokio::task::spawn(async move { systemd::run(service.clone(), tx).await });
-
-    // let watcher_task = tokio::task::spawn(async move {
-    //     let mut watcher = SystemdWatcher::new(service.as_str()).await?;
-    //     let mut stream = watcher.properties_stream().await;
-
-    //     let mut last_seen: Option<WatcherState> = None;
-
-    //     while let Some(item) = stream.next().await {
-    //         let item = item?;
-
-    //         if last_seen.as_ref().is_some_and(|e| e == &item) {
-    //             continue;
-    //         }
-    //         tx.send(item.clone())
-    //             .await
-    //             .expect("Error sending over channel");
-
-    //         last_seen = Some(item.clone());
-    //     }
-
-    //     Ok(()) as Result<(), SystemdError>
-    // });
+    let watcher_task =
+        tokio::task::spawn(async move { systemd::run(service.clone(), tx, 1).await });
 
     let stream_task = tokio::task::spawn(async move {
         let mut stream = ReceiverStream::new(rx);
@@ -51,9 +29,19 @@ async fn main() {
         while let Some(item) = stream.next().await {
             println!("Received state: {:?}", item);
         }
+
+        return Ok(()) as Result<(), ()>;
     });
 
-    let res = tokio::join!(watcher_task, stream_task);
+    let (watcher_result, publisher_result) = tokio::try_join!(watcher_task, stream_task).unwrap();
+
+    if let Err(e) = watcher_result {
+        println!("Error: {:?}", e);
+    };
+
+    if let Err(e) = publisher_result {
+        println!("Error: {:?}", e);
+    }
 
     println!("Hello, world!");
 }
