@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct HeartbeatState {
-    satus: HeartbeatStatus
+    satus: HeartbeatStatus,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -27,7 +27,7 @@ where
     status: HeartbeatStatus,
     _type: String,
     metadata: T,
-    uptime: String
+    uptime: String,
 }
 
 impl<T> Heartbeat<T>
@@ -46,7 +46,7 @@ where
             status,
             _type,
             metadata,
-            uptime
+            uptime,
         }
     }
 }

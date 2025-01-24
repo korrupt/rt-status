@@ -1,6 +1,6 @@
 use clap::Parser;
 use futures_util::StreamExt;
-use systemd::{SystemdError, SystemdWatcher};
+use systemd::{ActiveStateString, SystemdError, SystemdWatcher};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use watcher::WatcherState;
@@ -21,23 +21,29 @@ async fn main() {
     let (tx, rx) = mpsc::channel::<WatcherState>(10);
     let service = args.service;
 
-    let watcher_task = tokio::task::spawn(async move {
-        let mut watcher = SystemdWatcher::new(service.as_str()).await?;
-        let mut stream = watcher.properties_stream().await;
+    let watcher_task = tokio::task::spawn(async move { systemd::run(service.clone(), tx).await });
 
-        let mut last_seen: Option<WatcherState> = None;
+    // let watcher_task = tokio::task::spawn(async move {
+    //     let mut watcher = SystemdWatcher::new(service.as_str()).await?;
+    //     let mut stream = watcher.properties_stream().await;
 
-        while let Some(item) = stream.next().await {
-            let item = item?;
+    //     let mut last_seen: Option<WatcherState> = None;
 
-            if last_seen.as_ref().is_some_and(|e| e == &item) { continue; }
-            tx.send(item.clone()).await.expect("Error sending over channel");
-            
-            last_seen = Some(item.clone());
-        }
+    //     while let Some(item) = stream.next().await {
+    //         let item = item?;
 
-        Ok(()) as Result<(), SystemdError>
-    });
+    //         if last_seen.as_ref().is_some_and(|e| e == &item) {
+    //             continue;
+    //         }
+    //         tx.send(item.clone())
+    //             .await
+    //             .expect("Error sending over channel");
+
+    //         last_seen = Some(item.clone());
+    //     }
+
+    //     Ok(()) as Result<(), SystemdError>
+    // });
 
     let stream_task = tokio::task::spawn(async move {
         let mut stream = ReceiverStream::new(rx);
@@ -47,10 +53,7 @@ async fn main() {
         }
     });
 
-    let _ = tokio::join!(
-        watcher_task,
-        stream_task
-    );
+    let res = tokio::join!(watcher_task, stream_task);
 
     println!("Hello, world!");
 }
