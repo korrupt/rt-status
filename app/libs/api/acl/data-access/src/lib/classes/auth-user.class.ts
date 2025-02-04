@@ -4,54 +4,95 @@ import { AclService } from '../services';
 import { ForbiddenException } from '@nestjs/common';
 
 export type AclResourceInstance = { owner_id: string };
-
 class AclResult<
   T extends object | null = null,
   K extends object | null = null,
 > {
-  private resultFn?: (filteredDto?: any) => Promise<any>; // Store function reference
-  private filteredDto?: any;
+  private resultFn?: K extends null ? () => Promise<T> : (dto: K) => Promise<T>;
+  private filteredDto: K extends null ? null : K | undefined;
+
+  private permission: Permission;
 
   constructor(
-    readonly permission: Permission,
+    readonly action: string,
+    readonly resource: string,
+    readonly possession: 'own' | 'any',
     readonly auth: AuthUser,
-  ) {}
+  ) {
+    this.permission = this.auth.aclService.control.permission({
+      action,
+      resource,
+      role: auth.roles,
+      possession,
+    });
+
+    // Initialize filteredDto correctly based on K's type
+    this.filteredDto = null as any as K extends null ? null : undefined;
+  }
 
   get granted() {
     return this.permission.granted;
   }
 
-  public and<R extends object, U extends object | undefined = undefined>(
-    fn: (dto: U) => Promise<R>,
-    dto?: U,
-    action?: 'read' | 'update',
-  ): AclResult<T extends object ? T & R : R> {
+  public withFilteredDto<D extends object>(
+    dto: D,
+    action = 'read',
+  ): AclResult<T, D> {
+    const newInstance = new AclResult<T, D>(
+      this.action,
+      this.resource,
+      this.possession,
+      this.auth,
+    );
+
+    const filteredDto = this.auth.aclService.control
+      .permission({
+        role: this.auth.roles,
+        action,
+        possession: this.possession,
+        resource: this.resource,
+      })
+      .filter(dto);
+
+    newInstance.filteredDto = filteredDto as D extends null
+      ? null
+      : D | undefined;
+    newInstance.resultFn = this.resultFn as any; // Preserve function reference safely
+
+    return newInstance;
+  }
+
+  public withFunction<R extends object>(
+    fn: K extends null ? () => Promise<R> : (dto: K) => Promise<R>,
+  ): AclResult<R, K> {
     if (!this.granted) {
       throw new ForbiddenException(AuthUser.INSUFFICIENT_PERMISSIONS_MESSAGE);
     }
 
-    if (dto) {
-      this.filteredDto = this.permission.filter(dto); // todo: should be read
-    }
-
-    // Store function reference without executing it
-    const newInstance = new AclResult<T extends object ? T & R : R>(
-      this.permission,
+    const newInstance = new AclResult<R, K>(
+      this.action,
+      this.resource,
+      this.possession,
       this.auth,
     );
+
     newInstance.resultFn = fn;
+    newInstance.filteredDto = this.filteredDto; // Preserve the previous filtered DTO
+
     return newInstance;
   }
 
-  private async execute() {
+  private async execute(): Promise<T> {
     if (!this.resultFn) {
       throw new Error('No result available. Call `.and()` first.');
     }
 
-    if (this.filteredDto) {
-      return await this.resultFn(this.filteredDto);
+    if (this.filteredDto !== undefined && this.filteredDto !== null) {
+      return await (this.resultFn as (dto: K) => Promise<T>)(
+        this.filteredDto as K,
+      );
     } else {
-      return await this.resultFn(); // Execute stored function dynamically
+      return await (this.resultFn as () => Promise<T>)();
     }
   }
 
@@ -94,12 +135,9 @@ export class AuthUser {
     possession?: 'own' | 'any',
   ): AclResult {
     return new AclResult(
-      this.aclService.control.permission({
-        action: 'delete',
-        possession: possession || this.getPosession(target),
-        resource,
-        role: this.roles,
-      }),
+      'delete',
+      resource,
+      possession || this.getPosession(target),
       this,
     );
   }
@@ -110,12 +148,9 @@ export class AuthUser {
     possession?: 'own' | 'any',
   ): AclResult {
     return new AclResult(
-      this.aclService.control.permission({
-        action: 'update',
-        possession: possession || this.getPosession(target),
-        resource,
-        role: this.roles,
-      }),
+      'update',
+      resource,
+      possession || this.getPosession(target),
       this,
     );
   }
@@ -126,12 +161,9 @@ export class AuthUser {
     possession?: 'own' | 'any',
   ): AclResult {
     return new AclResult(
-      this.aclService.control.permission({
-        action: 'create',
-        possession: possession || this.getPosession(target),
-        resource,
-        role: this.roles,
-      }),
+      'create',
+      resource,
+      possession || this.getPosession(target),
       this,
     );
   }
@@ -142,22 +174,10 @@ export class AuthUser {
     possession?: 'own' | 'any',
   ): AclResult {
     return new AclResult(
-      this.aclService.control.permission({
-        action: 'read',
-        possession: possession || this.getPosession(target),
-        resource,
-        role: this.roles,
-      }),
+      'read',
+      resource,
+      possession || this.getPosession(target),
       this,
     );
-    // const action = 'read';
-    // const role = this.roles;
-
-    // return this.aclService.control.permission({
-    //   action,
-    //   possession: possession || this.getPosession(target),
-    //   resource,
-    //   role,
-    // });
   }
 }
