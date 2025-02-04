@@ -22,7 +22,7 @@ export class UserController {
   public async find(@GetAuth() auth: AuthUser) {
     return auth
       .read(AclResource.USER, null)
-      .and(() => this.user.find())
+      .withFunction(() => this.user.find())
       .filter();
   }
 
@@ -30,7 +30,7 @@ export class UserController {
   public async findOne(@GetAuth() auth: AuthUser, @Param('id') id: string) {
     return auth
       .read(AclResource.USER, { owner_id: id })
-      .and(() => this.user.findById(id))
+      .withFunction(() => this.user.findById(id))
       .filter();
   }
 
@@ -42,7 +42,8 @@ export class UserController {
   ) {
     return auth
       .update(AclResource.USER, { owner_id: id })
-      .and((filteredDto) => this.user.update(id, filteredDto), dto)
+      .withFilteredDto(dto, 'update')
+      .withFunction((filteredDto) => this.user.update(id, filteredDto))
       .filter();
   }
 
@@ -50,7 +51,7 @@ export class UserController {
   public async delete(@GetAuth() auth: AuthUser, @Param() id: string) {
     return auth
       .delete(AclResource.USER, { owner_id: id })
-      .and(() => this.user.delete(id))
+      .withFunction(() => this.user.delete(id))
       .filter();
   }
 }

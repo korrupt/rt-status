@@ -22,20 +22,20 @@ const MANAGE: (
 };
 
 export const permissions: AccessControlPermission[] = [
-  // {
-  //   role: AclRole.USER,
-  //   action: 'read',
-  //   resource: AclResource.USER,
-  //   possession: 'own',
-  //   attributes: ['*'],
-  // },
-  // {
-  //   role: AclRole.USER,
-  //   action: 'update',
-  //   resource: AclResource.USER,
-  //   possession: 'own',
-  //   attributes: ['name'],
-  // },
+  {
+    role: AclRole.USER,
+    action: 'read',
+    resource: AclResource.USER,
+    possession: 'own',
+    attributes: ['*'],
+  },
+  {
+    role: AclRole.USER,
+    action: 'update',
+    resource: AclResource.USER,
+    possession: 'own',
+    attributes: ['name'],
+  },
   {
     role: AclRole.MANAGER,
     action: 'read',

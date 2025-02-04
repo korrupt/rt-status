@@ -1,7 +1,10 @@
 import { Permission } from 'accesscontrol';
 import { AclResource, AclRole, permissions } from '@app/shared-models';
 import { AclService } from '../services';
-import { ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 export type AclResourceInstance = { owner_id: string };
 class AclResult<
@@ -97,11 +100,27 @@ class AclResult<
   }
 
   public async filter(): Promise<T> {
+    if (!this.resultFn) {
+      throw new InternalServerErrorException(`No function set.`);
+    }
+
     const result = await this.execute();
-    return this.permission.filter(result);
+
+    const readPermission = this.auth.aclService.control.permission({
+      action: 'read',
+      possession: this.possession,
+      resource: this.resource,
+      role: this.auth.roles,
+    });
+
+    return readPermission.filter(result);
   }
 
   public async get(): Promise<T> {
+    if (!this.resultFn) {
+      throw new InternalServerErrorException(`No function set.`);
+    }
+
     return this.execute();
   }
 }
