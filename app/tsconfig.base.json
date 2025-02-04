@@ -15,6 +15,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@app/acl-data-access": ["libs/api/acl/data-access/src/index.ts"],
+      "@app/acl-feature": ["libs/api/acl/feature/src/index.ts"],
       "@app/auth-config": ["libs/api/auth/config/src/index.ts"],
       "@app/auth-data-access": ["libs/api/auth/data-access/src/index.ts"],
       "@app/auth-feature": ["libs/api/auth/feature/src/index.ts"],

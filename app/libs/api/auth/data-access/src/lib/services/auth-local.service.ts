@@ -6,6 +6,7 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource, EntityManager } from 'typeorm';
 import {
+  ACL_DEFAULT_ROLE,
   AuthLocalLoginModel,
   AuthLocalRegisterModel,
   AuthLocalRegisterResultModel,
@@ -15,20 +16,27 @@ import { hash, compare } from 'bcryptjs';
 
 import { UserEntity } from '@app/user-models';
 import { AuthLocalEntity } from '@app/auth-models';
+import { AuthConfigService } from '@app/auth-config';
 
 @Injectable()
 export class AuthLocalService {
   constructor(
     @InjectDataSource() private dataSource: DataSource,
     private jwtService: JwtService,
+    private config: AuthConfigService,
   ) {}
 
   public async register(
     model: AuthLocalRegisterModel,
   ): Promise<AuthLocalRegisterResultModel> {
     await this.dataSource.transaction(async (em: EntityManager) => {
-      const user = await em.save(UserEntity, { name: model.name });
-      const h = await hash(model.password, 15);
+      // CREATE THE USER WITH DEFAULT ROLE
+      const user = await em.save(UserEntity, {
+        name: model.name,
+        roles: [ACL_DEFAULT_ROLE],
+      });
+      // ATTACH AUTH OBJECT
+      const h = await hash(model.password, this.config.BCRYPT_ROUNDS);
       const auth_local = await em.save(AuthLocalEntity, {
         email: model.email,
         hash: h,
@@ -62,7 +70,10 @@ export class AuthLocalService {
       throw new InternalServerErrorException(`AuthLocal has no user`);
     }
 
-    const payload = await this.jwtService.signAsync({ sub: user.id });
+    const payload = await this.jwtService.signAsync({
+      sub: user.id,
+      roles: user.roles,
+    });
 
     return { access_token: payload };
   }

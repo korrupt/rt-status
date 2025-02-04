@@ -1,0 +1,9 @@
+@id = 9bf18738-85ff-4343-a018-75a0e8e00d46
+
+PATCH http://{{endpoint}}/user/{{id}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Test user 1"
+}

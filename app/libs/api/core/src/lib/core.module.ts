@@ -3,6 +3,8 @@ import { TypeormFeatureModule } from '@app/typeorm-feature';
 import { DeviceFeatureModule } from '@app/device-feature';
 import { UserFeatureModule } from '@app/user-feature';
 import { AuthFeatureModule } from '@app/auth-feature';
+import { AclFeatureModule } from '@app/acl-feature';
+import { permissions } from '@app/shared-models';
 import { APP_PIPE } from '@nestjs/core';
 
 @Module({
@@ -11,6 +13,7 @@ import { APP_PIPE } from '@nestjs/core';
     DeviceFeatureModule,
     UserFeatureModule,
     AuthFeatureModule,
+    AclFeatureModule.register(permissions),
   ],
   providers: [
     {

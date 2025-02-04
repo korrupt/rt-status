@@ -41,7 +41,7 @@ export class UserService {
     model: UpdateUserModel,
   ): Promise<FindUserByIdResultModel> {
     const found = await this.findById(id);
-    return this.user.save({ ...found, model });
+    return this.user.save({ ...found, ...model });
   }
 
   public async delete(id: string): Promise<DeleteUserModel> {

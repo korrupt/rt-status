@@ -14,6 +14,7 @@ import { AuthConfigService } from './auth-config.service';
       validationSchema: Joi.object({
         AUTH_JWT_EXPIRES_IN: Joi.string().required(),
         AUTH_JWT_SECRET: Joi.string().required(),
+        AUTH_BCRYPT_ROUNDS: Joi.number().default(12),
       }),
     }),
   ],

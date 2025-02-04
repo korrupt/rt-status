@@ -13,4 +13,8 @@ export class AuthConfigService {
   get JWT_SECRET(): string {
     return this.config.get('auth.JWT_SECRET')!;
   }
+
+  get BCRYPT_ROUNDS(): string {
+    return this.config.get('auth.BCRYPT_ROUNDS')!;
+  }
 }
