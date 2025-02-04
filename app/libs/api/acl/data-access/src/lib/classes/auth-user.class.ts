@@ -48,14 +48,22 @@ class AclResult<
       this.auth,
     );
 
-    const filteredDto = this.auth.aclService.control
-      .permission({
-        role: this.auth.roles,
-        action,
-        possession: this.possession,
-        resource: this.resource,
-      })
-      .filter(dto);
+    const filterPermission = this.auth.aclService.control.permission({
+      role: this.auth.roles,
+      action,
+      possession: this.possession,
+      resource: this.resource,
+    });
+
+    for (const key of Object.keys(dto)) {
+      if (!filterPermission.attributes.includes(key)) {
+        throw new ForbiddenException(
+          `Insufficient permissions for key '${key}'`,
+        );
+      }
+    }
+
+    const filteredDto = filterPermission.filter(dto);
 
     newInstance.filteredDto = filteredDto as D extends null
       ? null
